@@ -1,0 +1,30 @@
+name: Build ADNL Texture Studio (Windows)
+
+# Builds only the Windows portable app for the ADNL branch (the upstream "Build all"
+# workflow builds 9 targets). The first run also builds the dependencies (~1.5-2 h);
+# later runs reuse the cache (~40-60 min).
+
+on:
+  push:
+    branches:
+      - 'adnl-**'
+    paths:
+      - 'src/**'
+      - 'deps/**'
+      - 'resources/**'
+      - '**/CMakeLists.txt'
+      - '.github/workflows/build_adnl.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_windows:
+    name: Windows x64
+    uses: ./.github/workflows/build_check_cache.yml
+    with:
+      os: windows-latest
+      build-deps-only: false
+    secrets: inherit

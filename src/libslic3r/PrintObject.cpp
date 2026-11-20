@@ -1797,6 +1797,7 @@ bool PrintObject::invalidate_state_by_config_options(
             || opt_key == "fuzzy_skin_octaves"
             || opt_key == "fuzzy_skin_persistence"
             || opt_key == "fuzzy_skin_mode"
+            || opt_key.rfind("fuzzy_skin_texture_", 0) == 0
             || opt_key == "detect_overhang_wall"
             //BBS
             || opt_key == "enable_overhang_speed"

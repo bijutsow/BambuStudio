@@ -113,6 +113,8 @@ bool GLGizmoMmuSegmentation::on_init()
     m_desc["shortcut_key"]         = _L("Choose filament");
     m_desc["same_color_connection"] = _L("Connected same color");
     m_desc["edge_detection"]       = _L("Edge detection");
+    m_desc["same_plane"]           = _L("Same plane");
+    m_desc["plane_tolerance"]      = _L("Plane tolerance");
     m_desc["gap_area_caption"]     = ctrl + _L("Mouse wheel");
     m_desc["gap_area"]             = _L("Gap area");
     m_desc["perform"]              = _L("Perform");
@@ -671,8 +673,36 @@ void GLGizmoMmuSegmentation::on_render_input_window(float x, float y, float bott
             m_smart_fill_angle = -1; // set to negative value to disable edge detection
             is_detect_geometry_edge = m_bucket_fill_mode == BucketFillType::EdgeDetect;
         }
+        // ADNL: coplanar fill (also fills islands enclosed by text / engravings)
+        ImGui::SameLine();
+        if (ImGui::RadioButton(m_desc["same_plane"].ToUTF8().data(), m_bucket_fill_mode == BucketFillType::SamePlane)) {
+            m_bucket_fill_mode = BucketFillType::SamePlane;
+            m_smart_fill_angle = std::max(m_last_edge_detection_smart_fill_angle, 1.f);
+            for (auto &triangle_selector : m_triangle_selectors) {
+                triangle_selector->seed_fill_unselect_all_triangles();
+                triangle_selector->request_update_render_data();
+            }
+        }
         ImGuiWrapper::pop_radio_style();
-        m_tool_type = ToolType::BUCKET_FILL;
+        const bool is_same_plane = m_bucket_fill_mode == BucketFillType::SamePlane;
+        is_detect_geometry_edge  = m_bucket_fill_mode == BucketFillType::EdgeDetect;
+        m_smart_fill_same_plane  = is_same_plane;
+        m_tool_type              = is_same_plane ? ToolType::SMART_FILL : ToolType::BUCKET_FILL;
+
+        if (is_same_plane) {
+            ImGui::AlignTextToFramePadding();
+            m_imgui->text(m_desc["plane_tolerance"]);
+            ImGui::SameLine(sliders_left_width);
+            ImGui::PushItemWidth(sliders_width);
+            if (m_imgui->bbl_slider_float_style("##plane_tolerance", &m_plane_fill_tolerance, 0.005f, 1.f, "%.3f mm", 1.0f, true))
+                for (auto &triangle_selector : m_triangle_selectors) {
+                    triangle_selector->seed_fill_unselect_all_triangles();
+                    triangle_selector->request_update_render_data();
+                }
+            ImGui::SameLine(drag_left_width + sliders_left_width);
+            ImGui::PushItemWidth(1.5 * slider_icon_width);
+            ImGui::BBLDragFloat("##plane_tolerance_input", &m_plane_fill_tolerance, 0.005f, 0.005f, 1.f, "%.3f");
+        }
 
         if (is_detect_geometry_edge) {
             if (m_last_edge_detection_smart_fill_angle != m_smart_fill_angle) {

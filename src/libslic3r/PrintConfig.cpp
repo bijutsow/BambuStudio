@@ -579,9 +579,36 @@ static t_config_enum_values s_keys_map_NoiseType {
     { "perlin",      int(NoiseType::Perlin) },
     { "billow",      int(NoiseType::Billow) },
     { "ridgedmulti", int(NoiseType::RidgedMulti) },
-    { "voronoi",     int(NoiseType::Voronoi) }
+    { "voronoi",     int(NoiseType::Voronoi) },
+    { "ribs",        int(NoiseType::Ribs) },
+    { "waves",       int(NoiseType::Waves) },
+    { "knurl",       int(NoiseType::Knurl) },
+    { "hexagon",     int(NoiseType::Hexagon) },
+    { "bricks",      int(NoiseType::Bricks) },
+    { "dots",        int(NoiseType::Dots) },
+    { "woodgrain",   int(NoiseType::Woodgrain) },
+    { "cracks",      int(NoiseType::Cracks) },
+    { "weave",       int(NoiseType::Weave) },
+    { "scales",      int(NoiseType::Scales) },
+    { "image",       int(NoiseType::Image) }
 };
 CONFIG_OPTION_ENUM_DEFINE_STATIC_MAPS(NoiseType)
+
+static t_config_enum_values s_keys_map_FuzzySkinProjection {
+    { "auto",        int(FuzzySkinProjection::Auto) },
+    { "box",         int(FuzzySkinProjection::Box) },
+    { "cylindrical", int(FuzzySkinProjection::Cylindrical) },
+    { "planar",      int(FuzzySkinProjection::Planar) }
+};
+CONFIG_OPTION_ENUM_DEFINE_STATIC_MAPS(FuzzySkinProjection)
+
+static t_config_enum_values s_keys_map_FuzzySkinProfile {
+    { "sine",     int(FuzzySkinProfile::Sine) },
+    { "triangle", int(FuzzySkinProfile::Triangle) },
+    { "square",   int(FuzzySkinProfile::Square) },
+    { "sawtooth", int(FuzzySkinProfile::Sawtooth) }
+};
+CONFIG_OPTION_ENUM_DEFINE_STATIC_MAPS(FuzzySkinProfile)
 
 static t_config_enum_values s_keys_map_FuzzySkinMode {
     { "displacement", int(FuzzySkinMode::Displacement) },
@@ -4112,7 +4139,10 @@ void PrintConfigDef::init_fff_params()
                      "Perlin: Perlin noise, which gives a more consistent texture.\n"
                      "Billow: Similar to perlin noise, but clumpier.\n"
                      "Ridged Multifractal: Ridged noise with sharp, jagged features. Creates marble-like textures.\n"
-                     "Voronoi: Divides the surface into voronoi cells, and displaces each one by a random amount. Creates a patchwork texture.");
+                     "Voronoi: Divides the surface into voronoi cells, and displaces each one by a random amount. Creates a patchwork texture.\n"
+                     "Ribs, Waves, Knurl, Hexagon, Bricks, Dots, Woodgrain, Cracks, Weave, Scales: geometric textures controlled by size, "
+                     "direction, stretch, profile and fill ratio.\n"
+                     "Image: uses a grayscale height map (white = relief).");
     def->enum_keys_map = &ConfigOptionEnum<NoiseType>::get_enum_values();
     def->enum_values.push_back("classic");
     def->enum_values.push_back("perlin");
@@ -4124,6 +4154,19 @@ void PrintConfigDef::init_fff_params()
     def->enum_labels.push_back("Billow");
     def->enum_labels.push_back("Ridged Multifractal");
     def->enum_labels.push_back("Voronoi");
+    for (const char *k : { "ribs", "waves", "knurl", "hexagon", "bricks", "dots", "woodgrain", "cracks", "weave", "scales", "image" })
+        def->enum_values.push_back(k);
+    def->enum_labels.push_back(L("Ribs"));
+    def->enum_labels.push_back(L("Waves"));
+    def->enum_labels.push_back(L("Knurl"));
+    def->enum_labels.push_back(L("Hexagon"));
+    def->enum_labels.push_back(L("Bricks"));
+    def->enum_labels.push_back(L("Dots"));
+    def->enum_labels.push_back(L("Woodgrain"));
+    def->enum_labels.push_back(L("Cracks"));
+    def->enum_labels.push_back(L("Weave"));
+    def->enum_labels.push_back(L("Scales"));
+    def->enum_labels.push_back(L("Image (height map)"));
     def->mode = comSimple;
     def->set_default_value(new ConfigOptionEnum<NoiseType>(NoiseType::Classic));
 
@@ -4171,6 +4214,116 @@ void PrintConfigDef::init_fff_params()
     def->enum_labels.push_back(L("Combined"));
     def->mode = comSimple;
     def->set_default_value(new ConfigOptionEnum<FuzzySkinMode>(FuzzySkinMode::Displacement));
+
+    // ---- ADNL Texture Studio ------------------------------------------------------------------
+    def = this->add("fuzzy_skin_texture_projection", coEnum);
+    def->label = L("Texture projection");
+    def->category = L("Others");
+    def->tooltip = L("How the texture is laid onto the walls.\n"
+                     "Auto: original 3D noise for noise types, Box for patterns.\n"
+                     "Box: projected from the X and Y sides and blended (boxes, covers, panels).\n"
+                     "Cylindrical: wrapped around the object's vertical axis (lamps, vases).\n"
+                     "Planar: projected along one direction set by azimuth and elevation (e.g. a cover printed at 45°).");
+    def->enum_keys_map = &ConfigOptionEnum<FuzzySkinProjection>::get_enum_values();
+    def->enum_values = { "auto", "box", "cylindrical", "planar" };
+    def->enum_labels = { L("Auto"), L("Box"), L("Cylindrical"), L("Planar") };
+    def->mode = comSimple;
+    def->set_default_value(new ConfigOptionEnum<FuzzySkinProjection>(FuzzySkinProjection::Auto));
+
+    def = this->add("fuzzy_skin_texture_angle", coFloat);
+    def->label = L("Texture direction");
+    def->category = L("Others");
+    def->tooltip = L("Rotation of the texture on the surface. 0° = lines parallel to the layers, 90° = vertical lines.");
+    def->sidetext = u8"°";
+    def->min = -360;
+    def->max = 360;
+    def->mode = comSimple;
+    def->set_default_value(new ConfigOptionFloat(0.));
+
+    def = this->add("fuzzy_skin_texture_stretch", coFloat);
+    def->label = L("Texture stretch");
+    def->category = L("Others");
+    def->tooltip = L("Stretches the texture along its direction. 1 = proportional, 3 = three times longer (streaks, brushed look).");
+    def->min = 0.05;
+    def->max = 50;
+    def->mode = comSimple;
+    def->set_default_value(new ConfigOptionFloat(1.));
+
+    def = this->add("fuzzy_skin_texture_profile", coEnum);
+    def->label = L("Texture profile");
+    def->category = L("Others");
+    def->tooltip = L("Cross-section of the relief: Sine (soft), Triangle (chamfered), Square (crisp steps), Sawtooth (asymmetric, like shingles).");
+    def->enum_keys_map = &ConfigOptionEnum<FuzzySkinProfile>::get_enum_values();
+    def->enum_values = { "sine", "triangle", "square", "sawtooth" };
+    def->enum_labels = { L("Sine"), L("Triangle"), L("Square"), L("Sawtooth") };
+    def->mode = comSimple;
+    def->set_default_value(new ConfigOptionEnum<FuzzySkinProfile>(FuzzySkinProfile::Sine));
+
+    def = this->add("fuzzy_skin_texture_fill", coFloat);
+    def->label = L("Texture relief ratio");
+    def->category = L("Others");
+    def->tooltip = L("Share of the pattern that stands in relief: rib width, cell size versus groove width, dot diameter, wave height.");
+    def->sidetext = "%";
+    def->min = 5;
+    def->max = 95;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(50.));
+
+    def = this->add("fuzzy_skin_texture_repeats", coInt);
+    def->label = L("Texture repeats around");
+    def->category = L("Others");
+    def->tooltip = L("Cylindrical projection only: number of repetitions around the object, so the pattern closes without a seam. "
+                     "0 = keep the feature size at every radius.");
+    def->min = 0;
+    def->max = 2000;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionInt(0));
+
+    def = this->add("fuzzy_skin_texture_azimuth", coFloat);
+    def->label = L("Projection azimuth");
+    def->category = L("Others");
+    def->tooltip = L("Planar projection only: horizontal direction the projection faces (0° = +X, 90° = +Y).");
+    def->sidetext = u8"°";
+    def->min = -360;
+    def->max = 360;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(0.));
+
+    def = this->add("fuzzy_skin_texture_elevation", coFloat);
+    def->label = L("Projection elevation");
+    def->category = L("Others");
+    def->tooltip = L("Planar projection only: tilt of the projection. Use the angle the face is printed at (e.g. 45° for a cover printed at 45°) "
+                     "so the texture is not stretched vertically.");
+    def->sidetext = u8"°";
+    def->min = -89;
+    def->max = 89;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(0.));
+
+    def = this->add("fuzzy_skin_texture_jitter", coFloat);
+    def->label = L("Texture jitter");
+    def->category = L("Others");
+    def->tooltip = L("Mixes classic random fuzz into the texture for a hand-made, less mechanical look.");
+    def->sidetext = "%";
+    def->min = 0;
+    def->max = 100;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(0.));
+
+    def = this->add("fuzzy_skin_texture_invert", coBool);
+    def->label = L("Invert texture");
+    def->category = L("Others");
+    def->tooltip = L("Swaps relief and grooves.");
+    def->mode = comSimple;
+    def->set_default_value(new ConfigOptionBool(false));
+
+    def = this->add("fuzzy_skin_texture_image", coString);
+    def->label = L("Texture image");
+    def->category = L("Others");
+    def->tooltip = L("Image noise type only: full path of a grayscale PNG/JPG height map (white = relief, black = groove). "
+                     "The image tile is \"Fuzzy skin feature size\" mm wide and repeats.");
+    def->mode = comSimple;
+    def->set_default_value(new ConfigOptionString(""));
 
     def           = this->add("filter_out_gap_fill", coFloat);
     def->label    = L("Filter out tiny gaps");

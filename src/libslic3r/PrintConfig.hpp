@@ -70,6 +70,34 @@ enum class NoiseType {
     Billow,
     RidgedMulti,
     Voronoi,
+    // ADNL Texture Studio (values must match Slic3r::FuzzyPattern in FuzzyTexture.hpp)
+    Ribs,
+    Waves,
+    Knurl,
+    Hexagon,
+    Bricks,
+    Dots,
+    Woodgrain,
+    Cracks,
+    Weave,
+    Scales,
+    Image,
+};
+
+// ADNL: how a 2D texture is laid onto the walls.
+enum class FuzzySkinProjection {
+    Auto,
+    Box,
+    Cylindrical,
+    Planar,
+};
+
+// ADNL: cross-section of periodic textures.
+enum class FuzzySkinProfile {
+    Sine,
+    Triangle,
+    Square,
+    Sawtooth,
 };
 
 enum class FuzzySkinMode {
@@ -584,6 +612,8 @@ CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(GCodeFlavor)
 CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(FuzzySkinType)
 CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(NoiseType)
 CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(FuzzySkinMode)
+CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(FuzzySkinProjection)
+CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(FuzzySkinProfile)
 CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(InfillPattern)
 CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(IroningType)
 CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(ConformalStagger)
@@ -1203,6 +1233,17 @@ PRINT_CONFIG_CLASS_DEFINE(
     ((ConfigOptionInt, fuzzy_skin_octaves))
     ((ConfigOptionFloat, fuzzy_skin_persistence))
     ((ConfigOptionEnum<FuzzySkinMode>, fuzzy_skin_mode))
+    ((ConfigOptionEnum<FuzzySkinProjection>, fuzzy_skin_texture_projection))
+    ((ConfigOptionFloat, fuzzy_skin_texture_angle))
+    ((ConfigOptionFloat, fuzzy_skin_texture_stretch))
+    ((ConfigOptionEnum<FuzzySkinProfile>, fuzzy_skin_texture_profile))
+    ((ConfigOptionFloat, fuzzy_skin_texture_fill))
+    ((ConfigOptionInt, fuzzy_skin_texture_repeats))
+    ((ConfigOptionFloat, fuzzy_skin_texture_azimuth))
+    ((ConfigOptionFloat, fuzzy_skin_texture_elevation))
+    ((ConfigOptionFloat, fuzzy_skin_texture_jitter))
+    ((ConfigOptionBool, fuzzy_skin_texture_invert))
+    ((ConfigOptionString, fuzzy_skin_texture_image))
     ((ConfigOptionFloatsNullable, gap_infill_speed))
     ((ConfigOptionInt, sparse_infill_filament))
     ((ConfigOptionFloat, sparse_infill_line_width))

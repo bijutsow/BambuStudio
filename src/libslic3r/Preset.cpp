@@ -1080,6 +1080,8 @@ static std::vector<std::string> s_Preset_print_options {
     "max_travel_detour_distance", "avoid_crossing_wall_includes_support",
     "fuzzy_skin", "fuzzy_skin_thickness", "fuzzy_skin_point_distance",
     "fuzzy_skin_first_layer", "fuzzy_skin_noise_type", "fuzzy_skin_scale", "fuzzy_skin_octaves", "fuzzy_skin_persistence", "fuzzy_skin_mode",
+    "fuzzy_skin_texture_projection", "fuzzy_skin_texture_angle", "fuzzy_skin_texture_stretch", "fuzzy_skin_texture_profile", "fuzzy_skin_texture_fill",
+    "fuzzy_skin_texture_repeats", "fuzzy_skin_texture_azimuth", "fuzzy_skin_texture_elevation", "fuzzy_skin_texture_jitter", "fuzzy_skin_texture_invert", "fuzzy_skin_texture_image",
 #ifdef HAS_PRESSURE_EQUALIZER
     "max_volumetric_extrusion_rate_slope_positive", "max_volumetric_extrusion_rate_slope_negative",
 #endif /* HAS_PRESSURE_EQUALIZER */

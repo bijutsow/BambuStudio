@@ -3454,6 +3454,20 @@ void TabPrint::build()
         optgroup->append_single_option_line("fuzzy_skin_persistence");
         optgroup->append_single_option_line("fuzzy_skin_first_layer");
 
+        // ADNL Texture Studio
+        optgroup = page->new_optgroup(L("Fuzzy skin texture"), L"param_special");
+        optgroup->append_single_option_line("fuzzy_skin_texture_projection");
+        optgroup->append_single_option_line("fuzzy_skin_texture_angle");
+        optgroup->append_single_option_line("fuzzy_skin_texture_stretch");
+        optgroup->append_single_option_line("fuzzy_skin_texture_profile");
+        optgroup->append_single_option_line("fuzzy_skin_texture_fill");
+        optgroup->append_single_option_line("fuzzy_skin_texture_invert");
+        optgroup->append_single_option_line("fuzzy_skin_texture_jitter");
+        optgroup->append_single_option_line("fuzzy_skin_texture_repeats");
+        optgroup->append_single_option_line("fuzzy_skin_texture_azimuth");
+        optgroup->append_single_option_line("fuzzy_skin_texture_elevation");
+        optgroup->append_single_option_line("fuzzy_skin_texture_image");
+
         optgroup = page->new_optgroup(L("Advanced"), L"advanced");
         optgroup->append_single_option_line("enable_wrapping_detection", "nozzle-clumping-detection-by-probing");
         optgroup->append_single_option_line("enable_order_independent_overlap_carving");

@@ -218,5 +218,16 @@
     "fuzzy_skin_mode": "displacement",
     "fuzzy_skin_scale": "1.0",
     "fuzzy_skin_octaves": "4",
-    "fuzzy_skin_persistence": "0.5"
+    "fuzzy_skin_persistence": "0.5",
+    "fuzzy_skin_texture_projection": "auto",
+    "fuzzy_skin_texture_angle": "0",
+    "fuzzy_skin_texture_stretch": "1",
+    "fuzzy_skin_texture_profile": "sine",
+    "fuzzy_skin_texture_fill": "50",
+    "fuzzy_skin_texture_repeats": "0",
+    "fuzzy_skin_texture_azimuth": "0",
+    "fuzzy_skin_texture_elevation": "0",
+    "fuzzy_skin_texture_jitter": "0",
+    "fuzzy_skin_texture_invert": "0",
+    "fuzzy_skin_texture_image": ""
 }

@@ -388,6 +388,17 @@ ParamTipStore::ParamTipStore()
         {"billow", _L("Similar to Perlin but clumpier, with clustered bumps and flat areas, like clouds.")},
         {"ridgedmulti", _L("Sharp jagged ridges with peaks and fine grooves, giving a marble-like texture.")},
         {"voronoi", _L("Divides the surface into cells and offsets each as a whole, forming a patchwork stepped texture.")},
+        {"ribs", _L("Parallel ribs; set direction 90° for vertical fluting.")},
+        {"waves", _L("Undulating lines, like sand ripples.")},
+        {"knurl", _L("Crossed diagonal grooves forming small pyramids, like a knurled grip.")},
+        {"hexagon", _L("Honeycomb cells separated by grooves.")},
+        {"bricks", _L("Running-bond brick or tile pattern; feature size = brick length.")},
+        {"dots", _L("Staggered grid of round bumps.")},
+        {"woodgrain", _L("Flowing grain lines, like sawn timber.")},
+        {"cracks", _L("Irregular cells separated by cracks, like dried clay or stone paving.")},
+        {"weave", _L("Basket weave of alternating strands.")},
+        {"scales", _L("Overlapping fish scales / roof shingles.")},
+        {"image", _L("Your own grayscale height map; white is relief.")},
     };
 }
 

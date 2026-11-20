@@ -7,9 +7,10 @@ struct ExtrusionLine;
 
 namespace Slic3r {
 
-void fuzzy_polyline(Points &poly, bool closed, coordf_t slice_z, const PrintRegionConfig &config);
-void fuzzy_polygon(Polygon &polygon, coordf_t slice_z, const PrintRegionConfig &config);
-void fuzzy_extrusion_line(Arachne::ExtrusionLine &ext_lines, coordf_t slice_z, const PrintRegionConfig &config);
+// outward_sign: +1 if the left normal of the path points out of the material, -1 otherwise (ADNL textures).
+void fuzzy_polyline(Points &poly, bool closed, coordf_t slice_z, const PrintRegionConfig &config, double outward_sign = -1.);
+void fuzzy_polygon(Polygon &polygon, coordf_t slice_z, const PrintRegionConfig &config, double outward_sign = -1.);
+void fuzzy_extrusion_line(Arachne::ExtrusionLine &ext_lines, coordf_t slice_z, const PrintRegionConfig &config, double outward_sign = -1.);
 
 bool should_fuzzify(const PrintRegionConfig &config, size_t layer_idx, size_t perimeter_idx, bool is_contour);
 

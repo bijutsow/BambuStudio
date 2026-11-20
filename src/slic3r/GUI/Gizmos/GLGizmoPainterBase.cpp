@@ -771,6 +771,18 @@ std::vector<GLGizmoPainterBase::ProjectedHeightRange> GLGizmoPainterBase::get_pr
 // The gizmo has an opportunity to react - if it does, it should return true so that the Canvas3D is
 // aware that the event was reacted to and stops trying to make different sense of it. If the gizmo
 // concludes that the event was not intended for it, it should return false.
+
+// ADNL: dispatch smart fill to the connected (edge detection) or the coplanar ("same plane") selection.
+void GLGizmoPainterBase::smart_fill_select(TriangleSelectorGUI &selector, const Vec3f &hit, int facet, const Transform3d &trafo_not_translate,
+                                           const TriangleSelector::ClippingPlane &clp, bool force_reselection)
+{
+    if (m_smart_fill_same_plane)
+        selector.plane_fill_select_triangles(hit, facet, clp, std::max(m_smart_fill_angle, 1.f), m_plane_fill_tolerance, force_reselection);
+    else
+        selector.seed_fill_select_triangles(hit, facet, trafo_not_translate, clp, m_smart_fill_angle,
+                                            m_paint_on_overhangs_only ? m_highlight_by_angle_threshold_deg : 0.f, force_reselection);
+}
+
 bool GLGizmoPainterBase::gizmo_event(SLAGizmoEventType action, const Vec2d& mouse_position, bool shift_down, bool alt_down, bool control_down)
 {
     Vec2d _mouse_position = mouse_position;
@@ -809,8 +821,12 @@ bool GLGizmoPainterBase::gizmo_event(SLAGizmoEventType action, const Vec2d& mous
                         mi->get_assemble_transformation().get_matrix(true) * mo->volumes[m_rr.mesh_id]->get_assemble_transformation().get_matrix(true) :
                         mi->get_transformation().get_matrix(true) * mo->volumes[m_rr.mesh_id]->get_matrix(true);
                     const Transform3d   trafo_matrix = get_volume_world_matrix(selection, mo, mo->volumes[m_rr.mesh_id], m_rr.mesh_id);
-                    m_triangle_selectors[m_rr.mesh_id]->seed_fill_select_triangles(m_rr.hit, int(m_rr.facet), trafo_matrix_not_translate, this->get_clipping_plane_in_volume_coordinates(trafo_matrix), m_smart_fill_angle,
-                                                                                   m_paint_on_overhangs_only ? m_highlight_by_angle_threshold_deg : 0.f, true);
+                    if (m_tool_type == ToolType::SMART_FILL)
+                        smart_fill_select(*m_triangle_selectors[m_rr.mesh_id], m_rr.hit, int(m_rr.facet), trafo_matrix_not_translate,
+                                          this->get_clipping_plane_in_volume_coordinates(trafo_matrix), true);
+                    else
+                        m_triangle_selectors[m_rr.mesh_id]->seed_fill_select_triangles(m_rr.hit, int(m_rr.facet), trafo_matrix_not_translate, this->get_clipping_plane_in_volume_coordinates(trafo_matrix), m_smart_fill_angle,
+                                                                                       m_paint_on_overhangs_only ? m_highlight_by_angle_threshold_deg : 0.f, true);
                     m_triangle_selectors[m_rr.mesh_id]->request_update_render_data();
                     m_seed_fill_last_mesh_id = m_rr.mesh_id;
                 }
@@ -971,8 +987,7 @@ bool GLGizmoPainterBase::gizmo_event(SLAGizmoEventType action, const Vec2d& mous
                     const int facet_idx = int(projected_mouse_position.facet_idx);
                     m_triangle_selectors[mesh_idx]->seed_fill_apply_on_triangles(new_state);
                     if (m_tool_type == ToolType::SMART_FILL)
-                        m_triangle_selectors[mesh_idx]->seed_fill_select_triangles(mesh_hit, facet_idx, trafo_matrix_not_translate, clp, m_smart_fill_angle,
-                                                                                       m_paint_on_overhangs_only ? m_highlight_by_angle_threshold_deg : 0.f, true);
+                        smart_fill_select(*m_triangle_selectors[mesh_idx], mesh_hit, facet_idx, trafo_matrix_not_translate, clp, true);
                     else if (m_tool_type == ToolType::BRUSH && m_cursor_type == TriangleSelector::CursorType::POINTER)
                         // BBS: add infill_angle parameter
                         m_triangle_selectors[mesh_idx]->bucket_fill_select_triangles(mesh_hit, facet_idx, clp, -1.f, false, true);
@@ -1068,8 +1083,7 @@ bool GLGizmoPainterBase::gizmo_event(SLAGizmoEventType action, const Vec2d& mous
         assert(m_rr.mesh_id < int(m_triangle_selectors.size()));
         const TriangleSelector::ClippingPlane &clp = this->get_clipping_plane_in_volume_coordinates(trafo_matrix);
         if (m_tool_type == ToolType::SMART_FILL)
-            m_triangle_selectors[m_rr.mesh_id]->seed_fill_select_triangles(m_rr.hit, int(m_rr.facet), trafo_matrix_not_translate, clp, m_smart_fill_angle,
-                                                                           m_paint_on_overhangs_only ? m_highlight_by_angle_threshold_deg : 0.f);
+            smart_fill_select(*m_triangle_selectors[m_rr.mesh_id], m_rr.hit, int(m_rr.facet), trafo_matrix_not_translate, clp, false);
         else if (m_tool_type == ToolType::BRUSH && m_cursor_type == TriangleSelector::CursorType::POINTER)
             // BBS: add infill_angle parameter
             m_triangle_selectors[m_rr.mesh_id]->bucket_fill_select_triangles(m_rr.hit, int(m_rr.facet), clp, -1.f, false);

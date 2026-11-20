@@ -309,8 +309,13 @@ protected:
     mutable Vec3d m_last_hit_its_center      = Vec3d::Zero();
     const float DEFAULT_FILL_ANGLE           = 30.f;
     float       m_smart_fill_angle           = DEFAULT_FILL_ANGLE;
+    // ADNL: smart fill "same plane" mode (fills coplanar islands, e.g. inside engraved letters).
+    bool        m_smart_fill_same_plane      = false;
+    float       m_plane_fill_tolerance       = 0.05f; // mm
+    void        smart_fill_select(TriangleSelectorGUI &selector, const Vec3f &hit, int facet, const Transform3d &trafo_not_translate,
+                                  const TriangleSelector::ClippingPlane &clp, bool force_reselection);
     float       m_last_edge_detection_smart_fill_angle = DEFAULT_FILL_ANGLE;
-    enum class BucketFillType { SameColor, EdgeDetect };
+    enum class BucketFillType { SameColor, EdgeDetect, SamePlane /* ADNL */ };
     BucketFillType m_bucket_fill_mode           = BucketFillType::EdgeDetect;
     bool     m_paint_on_overhangs_only          = false;
     float    m_highlight_by_angle_threshold_deg = 0.f;

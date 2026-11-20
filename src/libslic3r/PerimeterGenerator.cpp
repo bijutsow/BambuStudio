@@ -1923,7 +1923,18 @@ bool PerimeterRegion::has_compatible_perimeter_regions(const PrintRegionConfig &
            && config.fuzzy_skin_scale == other_config.fuzzy_skin_scale
            && config.fuzzy_skin_octaves == other_config.fuzzy_skin_octaves
            && config.fuzzy_skin_persistence == other_config.fuzzy_skin_persistence
-           && config.fuzzy_skin_mode == other_config.fuzzy_skin_mode;
+           && config.fuzzy_skin_mode == other_config.fuzzy_skin_mode
+           && config.fuzzy_skin_texture_projection == other_config.fuzzy_skin_texture_projection
+           && config.fuzzy_skin_texture_angle == other_config.fuzzy_skin_texture_angle
+           && config.fuzzy_skin_texture_stretch == other_config.fuzzy_skin_texture_stretch
+           && config.fuzzy_skin_texture_profile == other_config.fuzzy_skin_texture_profile
+           && config.fuzzy_skin_texture_fill == other_config.fuzzy_skin_texture_fill
+           && config.fuzzy_skin_texture_repeats == other_config.fuzzy_skin_texture_repeats
+           && config.fuzzy_skin_texture_azimuth == other_config.fuzzy_skin_texture_azimuth
+           && config.fuzzy_skin_texture_elevation == other_config.fuzzy_skin_texture_elevation
+           && config.fuzzy_skin_texture_jitter == other_config.fuzzy_skin_texture_jitter
+           && config.fuzzy_skin_texture_invert == other_config.fuzzy_skin_texture_invert
+           && config.fuzzy_skin_texture_image == other_config.fuzzy_skin_texture_image;
 }
 
 void PerimeterRegion::merge_compatible_perimeter_regions(PerimeterRegions &perimeter_regions)

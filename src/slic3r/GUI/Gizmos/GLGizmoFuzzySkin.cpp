@@ -88,6 +88,9 @@ bool GLGizmoFuzzySkin::on_init()
     m_desc["tool_type"]             = _L("Tool type");
     m_desc["smart_fill_angle_caption"] = ctrl + _L("Mouse wheel");
     m_desc["smart_fill_angle"]      = _L("Smart fill angle");
+    m_desc["edge_detection"]        = _L("Edge detection");
+    m_desc["same_plane"]            = _L("Same plane");
+    m_desc["plane_tolerance"]       = _L("Plane tolerance");
 
     memset(&m_print_instance, 0, sizeof(m_print_instance));
     return true;
@@ -339,6 +342,31 @@ void GLGizmoFuzzySkin::on_render_input_window(float x, float y, float bottom_lim
         ImGui::Separator();
         m_cursor_type = TriangleSelector::CursorType::POINTER;
         m_tool_type = ToolType::SMART_FILL;
+
+        // ADNL: "Same plane" mode fills every coplanar face, including islands inside letters.
+        ImGuiWrapper::push_radio_style();
+        if (ImGui::RadioButton(m_desc["edge_detection"].ToUTF8().data(), !m_smart_fill_same_plane)) {
+            m_smart_fill_same_plane = false;
+            for (auto &triangle_selector : m_triangle_selectors) { triangle_selector->seed_fill_unselect_all_triangles(); triangle_selector->request_update_render_data(); }
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton(m_desc["same_plane"].ToUTF8().data(), m_smart_fill_same_plane)) {
+            m_smart_fill_same_plane = true;
+            m_smart_fill_angle      = std::max(m_smart_fill_angle, 1.f);
+            for (auto &triangle_selector : m_triangle_selectors) { triangle_selector->seed_fill_unselect_all_triangles(); triangle_selector->request_update_render_data(); }
+        }
+        ImGuiWrapper::pop_radio_style();
+        if (m_smart_fill_same_plane) {
+            ImGui::AlignTextToFramePadding();
+            m_imgui->text(m_desc.at("plane_tolerance"));
+            ImGui::SameLine(sliders_left_width);
+            ImGui::PushItemWidth(sliders_width);
+            if (m_imgui->bbl_slider_float_style("##plane_tolerance", &m_plane_fill_tolerance, 0.005f, 1.f, "%.3f mm", 1.0f, true))
+                for (auto &triangle_selector : m_triangle_selectors) { triangle_selector->seed_fill_unselect_all_triangles(); triangle_selector->request_update_render_data(); }
+            ImGui::SameLine(drag_left_width);
+            ImGui::PushItemWidth(1.5 * slider_icon_width);
+            ImGui::BBLDragFloat("##plane_tolerance_input", &m_plane_fill_tolerance, 0.005f, 0.005f, 1.f, "%.3f");
+        }
 
         ImGui::AlignTextToFramePadding();
         m_imgui->text(m_desc.at("smart_fill_angle"));

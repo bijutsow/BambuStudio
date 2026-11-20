@@ -427,6 +427,57 @@ void TriangleSelector::seed_fill_select_triangles(const Vec3f &hit, int facet_st
     }
 }
 
+// ADNL: select all facets coplanar with the hit facet (connected or not).
+void TriangleSelector::plane_fill_select_triangles(const Vec3f &hit, int facet_start, const ClippingPlane &clp,
+                                                   float normal_angle_deg, float plane_tolerance, bool force_reselection)
+{
+    assert(facet_start < m_orig_size_indices);
+
+    if (int start_facet_idx = select_unsplit_triangle(hit, facet_start);
+        start_facet_idx >= 0 && m_triangles[start_facet_idx].is_selected_by_seed_fill() && !force_reselection && !clp.is_active())
+        return;
+
+    this->seed_fill_unselect_all_triangles();
+
+    const Vec3f  n0       = m_face_normals[m_triangles[facet_start].source_triangle];
+    const float  d0       = n0.dot(hit);
+    const float  tol      = std::max(plane_tolerance, 1e-4f);
+    const double cos_lim  = cos(Geometry::deg2rad(double(std::clamp(normal_angle_deg, 0.1f, 89.f)))) - EPSILON;
+
+    std::vector<int> stack;
+    for (int facet_idx = 0; facet_idx < m_orig_size_indices; ++facet_idx) {
+        const Triangle &tr = m_triangles[facet_idx];
+        if (!tr.valid())
+            continue;
+        if (double(m_face_normals[tr.source_triangle].dot(n0)) < cos_lim)
+            continue;
+        bool on_plane = true;
+        for (int vidx : tr.verts_idxs)
+            if (std::abs(n0.dot(m_vertices[vidx].v) - d0) > tol) {
+                on_plane = false;
+                break;
+            }
+        if (!on_plane || is_facet_clipped(facet_idx, clp))
+            continue;
+
+        // Select the leaves of this (possibly already split) source triangle.
+        stack.clear();
+        stack.push_back(facet_idx);
+        while (!stack.empty()) {
+            const int idx = stack.back();
+            stack.pop_back();
+            Triangle &t = m_triangles[idx];
+            if (!t.valid())
+                continue;
+            if (t.is_split()) {
+                for (int i = 0; i <= t.number_of_split_sides(); ++i)
+                    stack.push_back(t.children[i]);
+            } else
+                t.select_by_seed_fill();
+        }
+    }
+}
+
 void TriangleSelector::precompute_all_neighbors_recursive(const int facet_idx, const Vec3i &neighbors, const Vec3i &neighbors_propagated, std::vector<Vec3i> &neighbors_out, std::vector<Vec3i> &neighbors_propagated_out) const
 {
     assert(facet_idx < int(m_triangles.size()));

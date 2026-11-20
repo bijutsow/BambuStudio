@@ -1136,6 +1136,26 @@ void ConfigManipulation::toggle_print_fff_options(DynamicPrintConfig *config, in
     toggle_line("fuzzy_skin_octaves", fuzzy_skin_noise_type != NoiseType::Classic && fuzzy_skin_noise_type != NoiseType::Voronoi && has_fuzzy_skin);
     toggle_line("fuzzy_skin_persistence", (fuzzy_skin_noise_type == NoiseType::Perlin || fuzzy_skin_noise_type == NoiseType::Billow) && has_fuzzy_skin);
 
+    // ADNL Texture Studio
+    {
+        const bool is_pattern  = int(fuzzy_skin_noise_type) >= int(NoiseType::Ribs);
+        const bool is_textured = fuzzy_skin_noise_type != NoiseType::Classic && has_fuzzy_skin;
+        const auto projection  = config->opt_enum<FuzzySkinProjection>("fuzzy_skin_texture_projection");
+        const bool has_profile = is_pattern && fuzzy_skin_noise_type != NoiseType::Woodgrain && fuzzy_skin_noise_type != NoiseType::Weave &&
+                                 fuzzy_skin_noise_type != NoiseType::Image;
+        toggle_line("fuzzy_skin_scale", is_textured);
+        toggle_line("fuzzy_skin_octaves", is_textured && !is_pattern && fuzzy_skin_noise_type != NoiseType::Voronoi);
+        for (auto el : { "fuzzy_skin_texture_projection", "fuzzy_skin_texture_angle", "fuzzy_skin_texture_stretch", "fuzzy_skin_texture_invert",
+                         "fuzzy_skin_texture_jitter" })
+            toggle_line(el, is_textured);
+        toggle_line("fuzzy_skin_texture_profile", has_fuzzy_skin && has_profile);
+        toggle_line("fuzzy_skin_texture_fill", has_fuzzy_skin && is_pattern && fuzzy_skin_noise_type != NoiseType::Image);
+        toggle_line("fuzzy_skin_texture_repeats", is_textured && projection == FuzzySkinProjection::Cylindrical);
+        toggle_line("fuzzy_skin_texture_azimuth", is_textured && projection == FuzzySkinProjection::Planar);
+        toggle_line("fuzzy_skin_texture_elevation", is_textured && projection == FuzzySkinProjection::Planar);
+        toggle_line("fuzzy_skin_texture_image", has_fuzzy_skin && fuzzy_skin_noise_type == NoiseType::Image);
+    }
+
     bool have_arachne = config->opt_enum<PerimeterGeneratorType>("wall_generator") == PerimeterGeneratorType::Arachne;
     for (auto el : { "wall_transition_length", "wall_transition_filter_deviation", "wall_transition_angle",
         "min_feature_size", "min_bead_width", "wall_distribution_count" })
